@@ -2,15 +2,14 @@
 import numpy as np
 import sklearn
 import xgboost as xgb
-from sklearn.model_selection import KFold
+from sklearn.model_selection import StratifiedKFold
 from scipy.stats import norm
 
 
 def dml_ate(K, y_data, d_data, x_data, model_g, model_m, classical=True, inference=True, alpha=0.05):
     # Generate random partition of data for cross-fitting
     N = len(y_data)
-    indices = np.arange(N)
-    kf = KFold(n_splits=K, shuffle=True)
+    skf = StratifiedKFold(n_splits=K, shuffle=True)
 
     # Compute respective ML estimators and thereupon auxiliary estimators
     theta_0_check_list = []
@@ -19,7 +18,7 @@ def dml_ate(K, y_data, d_data, x_data, model_g, model_m, classical=True, inferen
     if inference:
         scores_list = []
     
-    for (train_indices, eval_indices) in kf.split(indices):
+    for (train_indices, eval_indices) in skf.split(X=x_data, y=d_data):
         y_train, d_train, x_train = y_data[train_indices], d_data[train_indices], x_data[train_indices]
         y_eval, d_eval, x_eval = y_data[eval_indices], d_data[eval_indices], x_data[eval_indices]
 
