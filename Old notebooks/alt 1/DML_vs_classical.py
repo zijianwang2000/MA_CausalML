@@ -38,12 +38,12 @@ def mm_ate(y_data, d_data, x_data):
 # In[4]:
 
 
+np.random.seed(100)
 n_MC = 5000
 K = 5
 results_dict = {}
 
 for N, opt_params_dict in opt_params_dict_dict.items():
-    np.random.seed(100)
     ate_estimates = np.empty((n_MC, 4))
     sigma_estimates = np.empty(n_MC)
     CIs = np.empty((n_MC, 2))
