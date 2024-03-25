@@ -9,7 +9,7 @@ from scipy.stats import norm
 def dml_ate(K, y_data, d_data, x_data, model_g, model_m, classical=True, inference=True, alpha=0.05):
     # Generate random partition of data for cross-fitting
     N = len(y_data)
-    skf = StratifiedKFold(n_splits=K, shuffle=True)
+    skf = StratifiedKFold(n_splits=K, shuffle=True, random_state=42)
 
     # Compute respective ML estimators and thereupon auxiliary estimators
     theta_0_check_list = []
