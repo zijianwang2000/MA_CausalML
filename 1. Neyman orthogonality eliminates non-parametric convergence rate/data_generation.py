@@ -17,7 +17,7 @@ def g_0(d, x):
     return d*x[:,0] + F(x[:,1]) - 2*x[:,2]**2
 
 
-# Generate a dataset of size N in a vectorized fashion
+# Generate a data set of size N in vectorized fashion
 def get_data(N):
     x_12 = np.random.multivariate_normal(mean=mean, cov=cov, size=N)
     x_3 = np.random.uniform(size=N)

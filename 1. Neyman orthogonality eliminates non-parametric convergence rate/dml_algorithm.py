@@ -6,7 +6,30 @@ from sklearn.model_selection import StratifiedKFold
 from scipy.stats import norm
 
 
-def dml_ate(K, y_data, d_data, x_data, model_g, model_m, classical=True, inference=True, alpha=0.05):
+# Infeasible method-of-moments estimator
+def mm_ate(y_data, d_data, x_data, g_0, m_0):
+    return np.mean(g_0(1, x_data) - g_0(0, x_data) + d_data*(y_data-g_0(1, x_data))/m_0(x_data)
+                   - (1-d_data)*(y_data-g_0(0, x_data))/(1-m_0(x_data)))
+
+
+# DML estimator without cross-fitting
+def dml_no_cf_ate(y_data, d_data, x_data, model_g, model_m):
+    # Estimate outcome regression functions g_0(d)
+    g_0_hat = []
+    for d in [0, 1]:
+        model_g[d].fit(X=x_data[d_data==d], y=y_data[d_data==d])
+        g_0_hat.append(model_g[d].predict(x_data))
+
+    # Estimate propensity score m_0
+    model_m.fit(X=x_data, y=d_data)
+    m_0_hat = model_m.predict_proba(x_data)[:,1]
+
+    return np.mean(g_0_hat[1] - g_0_hat[0] + d_data*(y_data-g_0_hat[1])/m_0_hat
+                   - (1-d_data)*(y_data-g_0_hat[0])/(1-m_0_hat))
+
+
+# DML estimator with cross-fitting
+def dml_ate(y_data, d_data, x_data, model_g, model_m, K=5, classical=True, inference=True, alpha=0.05):
     # Generate random partition of data for cross-fitting
     N = len(y_data)
     skf = StratifiedKFold(n_splits=K, shuffle=True, random_state=42)
