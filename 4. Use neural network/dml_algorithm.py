@@ -13,23 +13,26 @@ def mm_ate(y_data, d_data, x_data, g_0, m_0):
 
 
 # DML estimator without cross-fitting
-def dml_no_cf_ate(y_data, d_data, x_data, model_g, model_m):
+def dml_no_cf_ate(y_data, d_data, x_data, get_model_g, get_model_m, epochs=50, batch_size=8):
     # Estimate outcome regression functions g_0(d)
     g_0_hat = []
     for d in [0, 1]:
-        model_g[d].fit(X=x_data[d_data==d], y=y_data[d_data==d])
-        g_0_hat.append(model_g[d].predict(x_data))
+        model_g = get_model_g()
+        model_g.fit(x_data[d_data==d], y_data[d_data==d], epochs=epochs, batch_size=batch_size, verbose=0)
+        g_0_hat.append(model_g.predict(x_data).flatten())
 
     # Estimate propensity score m_0
-    model_m.fit(X=x_data, y=d_data)
-    m_0_hat = model_m.predict_proba(x_data)[:,1]
+    model_m = get_model_m()
+    model_m.fit(x_data, d_data, epochs=epochs, batch_size=batch_size, verbose=0)
+    m_0_hat = model_m.predict(x_data).flatten()
 
     return np.mean(g_0_hat[1] - g_0_hat[0] + d_data*(y_data-g_0_hat[1])/m_0_hat
                    - (1-d_data)*(y_data-g_0_hat[0])/(1-m_0_hat))
 
 
 # DML estimator with cross-fitting
-def dml_ate(y_data, d_data, x_data, model_g, model_m, K=5, classical=True, inference=True, alpha=0.05):
+def dml_ate(y_data, d_data, x_data, get_model_g, get_model_m, epochs=50, batch_size=8,
+            K=5, classical=True, inference=True, alpha=0.05):
     # Generate random partition of data for cross-fitting
     N = len(y_data)
     skf = StratifiedKFold(n_splits=K, shuffle=True, random_state=42)
@@ -48,12 +51,14 @@ def dml_ate(y_data, d_data, x_data, model_g, model_m, K=5, classical=True, infer
         # Estimate outcome regression functions g_0(d)
         g_0_hat = []
         for d in [0, 1]:
-            model_g[d].fit(X=x_train[d_train==d], y=y_train[d_train==d])
-            g_0_hat.append(model_g[d].predict(x_eval))
+            model_g = get_model_g()
+            model_g.fit(x_train[d_train==d], y_train[d_train==d], epochs=epochs, batch_size=batch_size, verbose=0)
+            g_0_hat.append(model_g.predict(x_eval).flatten())
 
         # Estimate propensity score m_0
-        model_m.fit(X=x_train, y=d_train)
-        m_0_hat = model_m.predict_proba(x_eval)[:,1]
+        model_m = get_model_m()
+        model_m.fit(x_train, d_train, epochs=epochs, batch_size=batch_size, verbose=0)
+        m_0_hat = model_m.predict(x_eval).flatten()
             
         # Compute auxiliary estimator
         scores = g_0_hat[1] - g_0_hat[0] + d_eval*(y_eval-g_0_hat[1])/m_0_hat - (1-d_eval)*(y_eval-g_0_hat[0])/(1-m_0_hat)

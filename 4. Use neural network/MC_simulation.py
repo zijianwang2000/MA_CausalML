@@ -1,45 +1,58 @@
 # Monte Carlo simulation
 import numpy as np
-import sklearn
-import xgboost as xgb
+import tensorflow as tf
 import pickle
 
+from keras.models import Sequential
+from keras.layers import Dense, Dropout, Input
 from data_generation import m_0, g_0, get_data
-from dml_algorithm import mm_ate, dml_ate
+from dml_algorithm import mm_ate, dml_no_cf_ate, dml_ate
 
 
-# Load tuned hyperparameters of XGBoost
-with open('opt_params_xgboost.pkl', 'rb') as pickle_file:
-    xgb_params_dict_dict = pickle.load(pickle_file)
+def get_model_g():
+    np.random.seed(42)
+    tf.random.set_seed(42)
+    model = Sequential()
+    model.add(Input(shape=(3,)))
+    model.add(Dense(8, activation='relu'))
+    model.add(Dropout(0.2))
+    model.add(Dense(1))
+    model.compile(loss='mean_squared_error', optimizer='adam')
+    return model
+
+def get_model_m():
+    np.random.seed(42)
+    tf.random.set_seed(42)
+    model = Sequential()
+    model.add(Input(shape=(3,)))
+    model.add(Dense(8, activation='relu'))
+    model.add(Dropout(0.2))
+    model.add(Dense(1, activation='sigmoid'))
+    model.compile(loss='binary_crossentropy', optimizer='adam')
+    return model
 
 
 # MC simulation for a given sample size N
-def mc_simulation(N, model_g, model_m, n_MC=5000):
+def mc_simulation(N, get_model_g, get_model_m, n_MC=5000):
     np.random.seed(100)
-    ate_estimates = np.empty((n_MC, 4))
-    sigma_estimates = np.empty(n_MC)
-    CIs = np.empty((n_MC, 2))
+    ate_estimates = np.empty((n_MC, 8))
+    sigma_estimates = np.empty((n_MC, 2))
+    CIs = np.empty((n_MC, 4))
 
     for j in range(n_MC):
         y_data, d_data, x_data = get_data(N)
         ate_estimates[j, 0] = mm_ate(y_data, d_data, x_data, g_0, m_0)
-        ate_estimates[j, 1:], sigma_estimates[j], CIs[j] = dml_ate(y_data, d_data, x_data, model_g, model_m)
+        ate_estimates[j, 1] = dml_no_cf_ate(y_data, d_data, x_data, get_model_g, get_model_m)
+        ate_estimates[j, 2:5], sigma_estimates[j, 0], CIs[j, :2] = dml_ate(y_data, d_data, x_data, get_model_g, get_model_m, K=2)
+        ate_estimates[j, 5:], sigma_estimates[j, 1], CIs[j, 2:] = dml_ate(y_data, d_data, x_data, get_model_g, get_model_m, K=5)
 
     return [ate_estimates, sigma_estimates, CIs]
 
 
 # MC simulation for all sample sizes
-results_dict = {}
-
-for N, xgb_params_dict in xgb_params_dict_dict.items():
-    model_g0, model_g1 = xgb.XGBRegressor(objective='reg:squarederror'), xgb.XGBRegressor(objective='reg:squarederror')
-    model_g0.set_params(**xgb_params_dict['g0'])
-    model_g1.set_params(**xgb_params_dict['g1'])
-    model_g = [model_g0, model_g1]
-    model_m = xgb.XGBClassifier(objective='binary:logistic')
-    model_m.set_params(**xgb_params_dict['m'])
-    results_dict[N] = mc_simulation(N, model_g, model_m)
-    print(f'MC simulation done for N={N}')
+N = 2000
+results_dict[N] = mc_simulation(N, get_model_g, get_model_m)
+print(f'MC simulation done for N={N}')
 
 with open('results_dict.pkl', 'wb') as pickle_file:
     pickle.dump(results_dict, pickle_file)
