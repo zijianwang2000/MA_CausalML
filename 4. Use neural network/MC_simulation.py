@@ -34,13 +34,20 @@ def get_model_m():
 
 # MC simulation for a given sample size N
 def mc_simulation(N, get_model_g, get_model_m, n_MC=5000):
-    np.random.seed(100)
+    np.random.seed(1)
+    y_data_list, d_data_list, x_data_list = [], [], []
+    for j in range(n_MC):
+        y_data, d_data, x_data = get_data(N) 
+        y_data_list.append(y_data)
+        d_data_list.append(d_data)
+        x_data_list.append(x_data)
+       
     ate_estimates = np.empty((n_MC, 8))
     sigma_estimates = np.empty((n_MC, 2))
     CIs = np.empty((n_MC, 4))
 
     for j in range(n_MC):
-        y_data, d_data, x_data = get_data(N)
+        y_data, d_data, x_data = y_data_list[j], d_data_list[j], x_data_list[j]
         ate_estimates[j, 0] = mm_ate(y_data, d_data, x_data, g_0, m_0)
         ate_estimates[j, 1] = dml_no_cf_ate(y_data, d_data, x_data, get_model_g, get_model_m)
         ate_estimates[j, 2:5], sigma_estimates[j, 0], CIs[j, :2] = dml_ate(y_data, d_data, x_data, get_model_g, get_model_m, K=2)
@@ -51,8 +58,8 @@ def mc_simulation(N, get_model_g, get_model_m, n_MC=5000):
 
 # MC simulation for all sample sizes
 N = 2000
-results_dict[N] = mc_simulation(N, get_model_g, get_model_m)
+results_dict = mc_simulation(N, get_model_g, get_model_m)
 print(f'MC simulation done for N={N}')
 
-with open('results_dict.pkl', 'wb') as pickle_file:
+with open(f'results_dict_{N}.pkl', 'wb') as pickle_file:
     pickle.dump(results_dict, pickle_file)

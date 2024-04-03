@@ -1,7 +1,5 @@
 # DML algorithm
 import numpy as np
-import sklearn
-import xgboost as xgb
 from sklearn.model_selection import StratifiedKFold
 from scipy.stats import norm
 
