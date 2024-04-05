@@ -15,7 +15,7 @@ with open('opt_params_xgboost.pkl', 'rb') as pickle_file:
 
 # MC simulation for a given sample size N
 def mc_simulation(N, model_g, model_m, n_MC=5000):
-    np.random.seed(3)
+    np.random.seed(100)
     ate_estimates = np.empty((n_MC, 4))
     sigma_estimates = np.empty(n_MC)
     CIs = np.empty((n_MC, 2))
