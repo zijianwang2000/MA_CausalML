@@ -1,5 +1,6 @@
 # Cross-validation to find optimal hyperparameters of XGBoost
 import numpy as np
+import sklearn
 import xgboost as xgb
 import pickle
 
@@ -13,9 +14,9 @@ def xgb_cv(y_data, d_data, x_data, cv=5):
 
     param_grid = {
         'n_estimators': [50, 75, 100, 150, 200],
-        'max_depth': [2],
-        'subsample': [0.6, 0.8],
-        'learning_rate': [0.03, 0.06, 0.1],
+        'max_depth': [2, 3],
+        'subsample': [0.6, 0.8, 1.0],
+        'learning_rate': [0.02, 0.05, 0.1, 0.2],
         'reg_lambda': [0.01, 0.1, 1, 10, 100]
     }
 

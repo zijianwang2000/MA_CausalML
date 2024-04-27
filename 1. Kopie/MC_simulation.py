@@ -9,8 +9,8 @@ from dml_algorithm import mm_ate, dml_ate
 
 
 # Load tuned hyperparameters of XGBoost
-#with open('opt_params_xgboost.pkl', 'rb') as pickle_file:
-#    xgb_params_dict_dict = pickle.load(pickle_file)
+with open('opt_params_xgboost.pkl', 'rb') as pickle_file:
+    xgb_params_dict_dict = pickle.load(pickle_file)
 
 
 # MC simulation for a given sample size N
@@ -31,21 +31,13 @@ def mc_simulation(N, model_g, model_m, n_MC=5000):
 # MC simulation for all sample sizes
 results_dict = {}
 
-params = {
-    'n_estimators': 200,
-    'max_depth': 3,
-    'subsample': 0.8,
-    'learning_rate': 0.03,
-    'reg_lambda': 3
-}
-
-for N in [250, 500, 1000, 2000, 4000, 8000, 16000]:
+for N, xgb_params_dict in xgb_params_dict_dict.items():
     model_g0, model_g1 = xgb.XGBRegressor(objective='reg:squarederror'), xgb.XGBRegressor(objective='reg:squarederror')
-    model_g0.set_params(**params)
-    model_g1.set_params(**params)
+    model_g0.set_params(**xgb_params_dict['g0'])
+    model_g1.set_params(**xgb_params_dict['g1'])
     model_g = [model_g0, model_g1]
     model_m = xgb.XGBClassifier(objective='binary:logistic')
-    model_m.set_params(**params)
+    model_m.set_params(**xgb_params_dict['m'])
     results_dict[N] = mc_simulation(N, model_g, model_m)
     print(f'MC simulation done for N={N}')
 
