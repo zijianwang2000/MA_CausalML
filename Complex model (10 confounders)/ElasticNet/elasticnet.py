@@ -18,8 +18,8 @@ def mc_simulation(N, n_MC=5000):
         poly_features = PolynomialFeatures(degree=2, include_bias=False)
         x_data_quad = poly_features.fit_transform(x_data)
         ate_estimates[j, 0] = mm_ate(y_data, d_data, x_data, g_0, m_0)
-        model_g0 = ElasticNetCV(l1_ratio=[0.1, 0.5, 0.7, 0.9, 0.95, 0.99, 1], n_alphas=10, n_jobs=-1)
-        model_g1 = ElasticNetCV(l1_ratio=[0.1, 0.5, 0.7, 0.9, 0.95, 0.99, 1], n_alphas=10, n_jobs=-1)
+        model_g0 = ElasticNetCV(l1_ratio=[0.1, 0.5, 0.7, 0.9, 0.95, 0.99, 1], n_alphas=10, max_iter=5000, n_jobs=-1)
+        model_g1 = ElasticNetCV(l1_ratio=[0.1, 0.5, 0.7, 0.9, 0.95, 0.99, 1], n_alphas=10, max_iter=5000, n_jobs=-1)
         model_g = [model_g0, model_g1]
         model_m = LogisticRegressionCV(Cs=10, l1_ratios=[0, 0.1, 0.2, 0.4, 0.6, 0.8, 0.9, 1],
                                        penalty='elasticnet', solver='saga', max_iter=1000,
