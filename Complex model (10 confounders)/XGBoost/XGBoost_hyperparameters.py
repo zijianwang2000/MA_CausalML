@@ -15,7 +15,7 @@ def xgb_cv(y_data, d_data, x_data, cv=5):
         'max_depth': [2],
         'subsample': [0.6, 0.8],
         'colsample_bytree': [0.6, 0.8, 1.0],
-        'learning_rate': [0.03, 0.06, 0.1],
+        'learning_rate': [0.02, 0.05, 0.1, 0.15],
         'reg_lambda': [0.01, 0.1, 1, 10],
         'reg_alpha': [0, 0.01, 0.1, 1]
     }

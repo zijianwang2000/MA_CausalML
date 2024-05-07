@@ -11,10 +11,7 @@ gamma = np.array([1.0, 2.0, 2.0, 3.0])
 F = lambda z: 1.0 / (1.0 + np.exp(-z))   # standard logistic function
 
 # Propensity score
-def m_0(x):
-    if x.ndim == 1:
-        x = x.reshape(1,-1)
-    return t.cdf(x @ beta + 0.25*x[:,7]**2 - x[:,8]*x[:,9], df)
+m_0 = lambda x: t.cdf(x @ beta, df)
 
 # Outcome regression function
 def g_0(d, x):
@@ -32,7 +29,7 @@ def get_data(N, rng):
     x_data = np.concatenate((x_normal, x_uniform), axis=1)
 
     xi = rng.standard_t(df=df, size=N)
-    d_data = (x_data @ beta + 0.25*x_data[:,7]**2 - x_data[:,8]*x_data[:,9] + xi >= 0).astype(float)
+    d_data = (x_data @ beta + xi >= 0).astype(float)
         
     u = rng.normal(scale=np.mean(np.abs(x_data), axis=-1))
     y_data = g_0(d_data, x_data) + u 
