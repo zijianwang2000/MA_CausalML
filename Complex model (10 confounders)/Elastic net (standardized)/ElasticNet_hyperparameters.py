@@ -2,7 +2,7 @@
 import numpy as np
 import pickle
 from sklearn.linear_model import ElasticNetCV, LogisticRegressionCV
-from sklearn.preprocessing import PolynomialFeatures
+from sklearn.preprocessing import PolynomialFeatures, StandardScaler
 from data_generation import get_data
 
 
@@ -35,7 +35,9 @@ for N in sample_sizes:
         y_data, d_data, x_data = get_data(N, rng)
         poly_features = PolynomialFeatures(degree=2, include_bias=False)
         x_data_quad = poly_features.fit_transform(x_data)
-        opt_params_eln_N[j] = eln_cv(y_data, d_data, x_data_quad)
+        scaler = StandardScaler()
+        x_data_quad_stand = scaler.fit_transform(x_data_quad)
+        opt_params_eln_N[j] = eln_cv(y_data, d_data, x_data_quad_stand)
 
     opt_params_eln[N] = opt_params_eln_N
     print(f'Cross-validation done for N={N}')
