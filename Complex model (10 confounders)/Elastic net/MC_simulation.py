@@ -2,7 +2,7 @@
 import numpy as np
 import pickle
 from sklearn.linear_model import ElasticNet, LogisticRegression
-from sklearn.preprocessing import PolynomialFeatures
+from sklearn.preprocessing import PolynomialFeatures, StandardScaler
 from data_generation import m_0, g_0, get_data
 from dml_algorithm import mm_ate, dml_ate
 
@@ -35,10 +35,12 @@ def mc_simulation(N, n_MC=2000):
         y_data, d_data, x_data = get_data(N, rng)
         poly_features = PolynomialFeatures(degree=2, include_bias=False)
         x_data_quad = poly_features.fit_transform(x_data)
+        scaler = StandardScaler()
+        x_data_quad_stand = scaler.fit_transform(x_data_quad)
         
         ate_estimates[j, 0] = mm_ate(y_data, d_data, x_data, g_0, m_0)     
         model_g, model_m = get_models(opt_params_eln[N][j])
-        ate_estimates[j, 1:], sigma_estimates[j], CIs[j] = dml_ate(y_data, d_data, x_data_quad, model_g, model_m)
+        ate_estimates[j, 1:], sigma_estimates[j], CIs[j] = dml_ate(y_data, d_data, x_data_quad_stand, model_g, model_m)
 
     return [ate_estimates, sigma_estimates, CIs]
 

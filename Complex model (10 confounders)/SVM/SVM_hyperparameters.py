@@ -3,6 +3,7 @@ import numpy as np
 import pickle
 from sklearn.svm import SVR, SVC
 from sklearn.model_selection import GridSearchCV
+from sklearn.preprocessing import StandardScaler
 from data_generation import get_data
 
 
@@ -12,11 +13,11 @@ def svm_cv(y_data, d_data, x_data, cv=5):
 
     param_grid_m = {
         'kernel': ['linear', 'rbf'],
-        'C': [0.1, 0.3, 1, 3, 10, 30, 100],
-        'gamma': [0.001, 0.01, 0.1, 1, 10]
+        'C': [1, 3, 10, 30, 100, 300],
+        'gamma': [0.001, 0.003, 0.01, 0.03, 0.1]
     }
     param_grid_g = param_grid_m.copy()
-    param_grid_g['epsilon'] = [0.01, 0.03, 0.1, 0.3, 1]
+    param_grid_g['epsilon'] = [0.01, 0.03, 0.1, 0.3, 1, 3]
 
     grid_search_g = GridSearchCV(estimator=svm_model_g, param_grid=param_grid_g, cv=cv, n_jobs=-1,
                                  scoring='neg_mean_squared_error')
@@ -44,7 +45,9 @@ for N in sample_sizes:
     
     for j in range(n_MC): 
         y_data, d_data, x_data = get_data(N, rng)
-        opt_params_svm_N[j] = svm_cv(y_data, d_data, x_data)
+        scaler = StandardScaler()
+        x_data_stand = scaler.fit_transform(x_data)
+        opt_params_svm_N[j] = svm_cv(y_data, d_data, x_data_stand)
 
     opt_params_svm[N] = opt_params_svm_N
     print(f'Cross-validation done for N={N}')
