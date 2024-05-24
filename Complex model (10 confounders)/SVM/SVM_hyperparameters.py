@@ -12,14 +12,12 @@ def svm_cv(y_data, d_data, x_data, cv=5):
     svm_model_m = SVC(probability=True, random_state=42)
 
     param_grid_m = {
-        'kernel': ['linear', 'rbf'],
-        'C': [10, 30, 100, 300, 1000],
+        'kernel': ['rbf'],
+        'C': [10, 30, 100, 300],
         'gamma': [0.001, 0.003, 0.01, 0.03]
     }
     param_grid_g = param_grid_m.copy()
-    param_grid_g['C'] = [30, 100, 300, 1000]
-    param_grid_g['epsilon'] = [0.03, 0.1, 0.3, 1]
-    
+    param_grid_g['epsilon'] = [0.03, 0.1, 0.3, 1]  
 
     grid_search_g = GridSearchCV(estimator=svm_model_g, param_grid=param_grid_g, cv=cv, n_jobs=-1,
                                  scoring='neg_mean_squared_error')
