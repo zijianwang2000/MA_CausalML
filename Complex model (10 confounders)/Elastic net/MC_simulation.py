@@ -4,7 +4,7 @@ import pickle
 from sklearn.linear_model import ElasticNet, LogisticRegression
 from sklearn.preprocessing import PolynomialFeatures, StandardScaler
 from data_generation import get_data
-from dml_algorithm import mm_ate, dml_ate
+from dml_algorithm import mm_ate, dml_parallel_ate
 
 
 # Load tuned hyperparameters of ElasticNet
@@ -41,7 +41,7 @@ def mc_simulation(N, n_MC=2000):
 
         ate_estimates[j, 0] = mm_ate(y_data, d_data, x_data)
         model_g, model_m = get_models(opt_params_eln[N][j])
-        ate_estimates[j, 1:], sigma_estimates[j], CIs[j], rmses[j] = dml_ate(y_data, d_data, [x_data, x_data_quad_stand], model_g, model_m)
+        ate_estimates[j, 1:], sigma_estimates[j], CIs[j], rmses[j] = dml_parallel_ate(y_data, d_data, [x_data, x_data_quad_stand], model_g, model_m)
 
     return [ate_estimates, sigma_estimates, CIs, rmses]
 
