@@ -1,0 +1,55 @@
+# Cross-validation to find optimal hyperparameters of NN
+import numpy as np
+import pickle
+from sklearn.neural_network import MLPRegressor, MLPClassifier
+from sklearn.model_selection import GridSearchCV
+from sklearn.preprocessing import StandardScaler
+from data_generation import get_data
+
+
+def mlp_cv(y_data, d_data, x_data, cv=5):
+    mlp_model_g = MLPRegressor(random_state=42, validation_fraction=0)
+    mlp_model_m = MLPClassifier(random_state=42, validation_fraction=0)
+
+    param_grid_g = {
+        'hidden_layer_sizes': [750, 1000],
+        'alpha': [2],
+        'batch_size': [0.6, 0.8],
+        'max_iter': [0.6, 0.8, 1.0]
+    }
+    param_grid_m = param_grid_g.copy()
+    param_grid_m['n_estimators'] = [250, 500, 750, 1000]
+
+    grid_search_g = GridSearchCV(estimator=mlp_model_g, param_grid=param_grid_g, cv=cv, n_jobs=-1,
+                                 scoring='neg_mean_squared_error')
+    grid_search_m = GridSearchCV(estimator=mlp_model_m, param_grid=param_grid_m, cv=cv, n_jobs=-1,
+                                 scoring='neg_brier_score')
+
+    mlp_params_dict = {}
+    for d in [0, 1]:
+        grid_search_g.fit(X=x_data[d_data == d], y=y_data[d_data == d])
+        mlp_params_dict[f'g{d}'] = grid_search_g.best_params_
+    grid_search_m.fit(X=x_data, y=d_data)
+    mlp_params_dict['m'] = grid_search_m.best_params_
+
+    return mlp_params_dict
+
+
+# Perform cross-validation for all data sets
+sample_sizes = [250, 500, 1000, 2000, 4000, 8000, 16000]
+n_MC = 2000
+opt_params_mlp = {}
+
+for N in sample_sizes:
+    rng = np.random.default_rng(seed=123)
+    opt_params_mlp_N = {}
+    
+    for j in range(n_MC): 
+        y_data, d_data, x_data = get_data(N, rng)
+        opt_params_mlp_N[j] = mlp_cv(y_data, d_data, x_data)
+
+    opt_params_mlp[N] = opt_params_mlp_N
+    print(f'Cross-validation done for N={N}')
+
+with open('opt_params_mlp.pkl', 'wb') as pickle_file:
+    pickle.dump(opt_params_mlp, pickle_file)
