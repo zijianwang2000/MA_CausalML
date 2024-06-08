@@ -14,7 +14,7 @@ def mm_ate(y_data, d_data, x_data):
 
 
 # DML estimator without cross-fitting
-def dml_no_cf_ate(y_data, d_data, x_data, model_g, model_m, alpha=0.05, m_bounds=(0.0025, 0.9975)):
+def dml_no_cf_ate(y_data, d_data, x_data, model_g, model_m, alpha=0.05, m_bounds=(0.005, 0.995)):
     # Estimate outcome regression functions g_0(d)
     g_0_hat = []
     for d in [0, 1]:
@@ -41,7 +41,7 @@ def dml_no_cf_ate(y_data, d_data, x_data, model_g, model_m, alpha=0.05, m_bounds
 
 
 # DML estimator with cross-fitting, without parallelization
-def dml_ate(y_data, d_data, x_data_all, model_g, model_m, K=5, alpha=0.05, classical=True, errors=True, m_bounds=(0.0025, 0.9975)):
+def dml_ate(y_data, d_data, x_data_all, model_g, model_m, K=5, alpha=0.05, classical=True, errors=True, m_bounds=(0.005, 0.995)):
     # Check for transformed input features
     if isinstance(x_data_all, list):
         x_data_orig, x_data = x_data_all[0], x_data_all[1]
@@ -121,7 +121,7 @@ def dml_ate(y_data, d_data, x_data_all, model_g, model_m, K=5, alpha=0.05, class
 
 
 # DML estimator with cross-fitting, parallelized
-def dml_parallel_ate(y_data, d_data, x_data_all, model_g, model_m, K=5, alpha=0.05, classical=True, errors=True, m_bounds=(0.0025, 0.9975)):
+def dml_parallel_ate(y_data, d_data, x_data_all, model_g, model_m, K=5, alpha=0.05, classical=True, errors=True, m_bounds=(0.005, 0.995)):
     # Check for transformed input features
     if isinstance(x_data_all, list):
         x_data_orig, x_data = x_data_all[0], x_data_all[1]
