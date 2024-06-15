@@ -1,4 +1,4 @@
-# DML algorithm
+# Parallelized DML algorithm
 import numpy as np
 from joblib import Parallel, delayed
 from sklearn.model_selection import StratifiedKFold
@@ -6,8 +6,8 @@ from sklearn.base import is_regressor
 from scipy.stats import norm
 
 
-# DML estimator of the ATE
-def dml_parallel_ate(y_data, d_data, x_data, model_g, model_m, K=5, alpha=0.05, classical=False, m_bounds=None):
+# DML estimator of the ATE and ATT
+def dml_ate_att(y_data, d_data, x_data, model_g, model_m, K=5, alpha=0.05, m_bounds=None):
     # Process one data split in the cross-fitting procedure
     def process_single_split(train_indices, eval_indices):
         y_train, d_train, x_train = y_data[train_indices], d_data[train_indices], x_data[train_indices]
@@ -28,18 +28,12 @@ def dml_parallel_ate(y_data, d_data, x_data, model_g, model_m, K=5, alpha=0.05, 
         if m_bounds is not None:
             np.clip(m_0_hat, m_bounds[0], m_bounds[1], out=m_0_hat)
 
-        # Compute auxiliary estimator
-        scores = g_0_hat[1] - g_0_hat[0] + d_eval*(y_eval-g_0_hat[1])/m_0_hat - (1-d_eval)*(y_eval-g_0_hat[0])/(1-m_0_hat)
-        theta_0_check = np.mean(scores)
+        # Compute auxiliary estimators and store scores for variance estimation
+        ate_scores = g_0_hat[1] - g_0_hat[0] + d_eval*(y_eval-g_0_hat[1])/m_0_hat - (1-d_eval)*(y_eval-g_0_hat[0])/(1-m_0_hat)
+        att_scores = d_eval*(y_eval-g_0_hat[0]) - m_0_hat*(1-d_eval)*(y_eval-g_0_hat[0])/(1-m_0_hat)
+        ate_aux, att_aux = np.mean(ate_scores), np.mean(att_scores)/np.mean(d_eval)
 
-        # For regression & IPW estimators
-        if classical:
-            reg_check = np.mean(g_0_hat[1] - g_0_hat[0])
-            ipw_check = np.mean(d_eval*y_eval/m_0_hat - (1-d_eval)*y_eval/(1-m_0_hat))
-        else:
-            reg_check, ipw_check = None, None
-
-        return theta_0_check, reg_check, ipw_check, scores
+        return ate_aux, att_aux, ate_scores, lambda theta: (att_scores-theta*d_eval)/np.mean(d_train)
 
     # Partition the data for cross-fitting
     skf = StratifiedKFold(n_splits=K, shuffle=False)
@@ -47,25 +41,22 @@ def dml_parallel_ate(y_data, d_data, x_data, model_g, model_m, K=5, alpha=0.05, 
     # Cross-fitting, where the different splits are processed in parallel
     results = Parallel(n_jobs=K)(delayed(process_single_split)(train_indices, eval_indices) for train_indices, eval_indices in skf.split(X=x_data, y=d_data))
 
-    # Collect results (in particular the auxiliary estimators)
-    theta_0_check_list = [result[0] for result in results]
-    scores_list = [result[3] for result in results]   # Needed for variance estimation
-    if classical:
-        reg_check_list, ipw_check_list = [result[1] for result in results], [result[2] for result in results]
+    # Collect results
+    ate_aux_list = [result[0] for result in results]
+    att_aux_list = [result[1] for result in results]
+    ate_scores_list = [result[2] for result in results]
+    att_scores_list = [result[3] for result in results]
 
-    # Compute final estimator
-    theta_0_hat = np.mean(theta_0_check_list)
-    if classical:
-        reg_hat, ipw_hat = np.mean(reg_check_list), np.mean(ipw_check_list)
+    # Compute final estimators
+    ate_hat, att_hat = np.mean(ate_aux_list), np.mean(att_aux_list)
 
     # Inference: estimate standard deviation and construct confidence interval
-    sigma_hat = np.sqrt(np.mean((np.concatenate(scores_list)-theta_0_hat)**2))
+    ate_sigma_hat = np.sqrt(np.mean((np.concatenate(ate_scores_list)-ate_hat)**2))
+    att_sigma_hat = np.sqrt(np.mean(np.concatenate([phi(att_hat) for phi in att_scores_list])**2))
     N = len(y_data)
     quantile = norm.ppf(1-alpha/2)
-    CI = np.array([theta_0_hat-quantile*sigma_hat/np.sqrt(N), theta_0_hat+quantile*sigma_hat/np.sqrt(N)])
+    ate_CI = np.array([ate_hat-quantile*ate_sigma_hat/np.sqrt(N), ate_hat+quantile*ate_sigma_hat/np.sqrt(N)])
+    att_CI = np.array([att_hat-quantile*att_sigma_hat/np.sqrt(N), att_hat+quantile*att_sigma_hat/np.sqrt(N)])
 
     # Return results
-    if classical:
-        return np.array([theta_0_hat, reg_hat, ipw_hat]), sigma_hat, CI
-    else:
-        return theta_0_hat, sigma_hat, CI
+    return [ate_hat, ate_sigma_hat, ate_CI], [att_hat, att_sigma_hat, att_CI]
