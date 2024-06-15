@@ -6,7 +6,7 @@ from sklearn.base import is_regressor
 from scipy.stats import norm
 
 
-# DML estimator of the ATE (parallelized)
+# DML estimator of the ATE
 def dml_parallel_ate(y_data, d_data, x_data, model_g, model_m, K=5, alpha=0.05, classical=False, m_bounds=None):
     # Process one data split in the cross-fitting procedure
     def process_single_split(train_indices, eval_indices):
