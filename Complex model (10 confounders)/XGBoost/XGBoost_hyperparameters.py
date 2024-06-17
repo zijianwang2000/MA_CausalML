@@ -40,18 +40,18 @@ def xgb_cv(y_data, d_data, x_data, cv=5):
 # Perform cross-validation for all data sets
 sample_sizes = [250, 500, 1000, 2000, 4000, 8000, 16000]
 n_MC = 2000
-opt_params_xgb = {}
+opt_params_xgboost = {}
 
 for N in sample_sizes:
     rng = np.random.default_rng(seed=123)
-    opt_params_xgb_N = {}
+    opt_params_xgboost_N = {}
     
     for j in range(n_MC): 
         y_data, d_data, x_data = get_data(N, rng)
-        opt_params_xgb_N[j] = xgb_cv(y_data, d_data, x_data)
+        opt_params_xgboost_N[j] = xgb_cv(y_data, d_data, x_data)
 
-    opt_params_xgb[N] = opt_params_xgb_N
+    opt_params_xgboost[N] = opt_params_xgboost_N
     print(f'Cross-validation done for N={N}')
 
-with open('opt_params_xgb.pkl', 'wb') as pickle_file:
-    pickle.dump(opt_params_xgb, pickle_file)
+with open('opt_params_xgboost.pkl', 'wb') as pickle_file:
+    pickle.dump(opt_params_xgboost, pickle_file)

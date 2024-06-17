@@ -7,7 +7,6 @@ cov = np.array([[1.0, -0.2], [-0.2, 0.5]])
 beta = np.array([1.0, 2.0, -1.0])
 F = lambda z: 1.0 / (1.0 + np.exp(-z))   # standard logistic function
 
-
 # Propensity score
 m_0 = lambda x: F(x @ beta)
 
@@ -21,7 +20,6 @@ def g_0(d, x):
 # Generate a dataset of size N in vectorized fashion
 def get_data(N, rng):
     x_12 = rng.multivariate_normal(mean=mean, cov=cov, size=N)
-    np.clip(x_12, -2.5, 4.5, out=x_12)
     x_3 = rng.uniform(size=N)
     x_data = np.concatenate((x_12, x_3.reshape(N,1)), axis=1)
 

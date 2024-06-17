@@ -8,12 +8,12 @@ from scipy.stats import norm
 from data_generation import g_0, m_0
 
 
-# Infeasible method-of-moments estimator of the ATE
+# Infeasible method-of-moments (oracle) estimator of the ATE
 def mm_ate(y_data, d_data, x_data):
     return np.mean(g_0(1, x_data) - g_0(0, x_data) + d_data*(y_data-g_0(1, x_data))/m_0(x_data) - (1-d_data)*(y_data-g_0(0, x_data))/(1-m_0(x_data)))
 
 
-# DML estimator of the ATE without cross-fitting
+# 'DML' estimator of the ATE without cross-fitting
 def dml_no_cf_ate(y_data, d_data, x_data, model_g, model_m, alpha=0.05, m_bounds=None):
     # Estimate outcome regression functions g_0(d)
     g_0_hat = []

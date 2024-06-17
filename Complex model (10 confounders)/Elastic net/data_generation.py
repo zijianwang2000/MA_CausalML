@@ -5,7 +5,6 @@ from scipy.stats import t
 
 mean = np.linspace(0.7, 0.0, 8)
 cov = np.array([[round(0.6**abs(i-j)*((-1.01)**(i+j)), 3) for j in range(8)] for i in range(8)])
-lower, upper = mean - 4*np.sqrt(np.diagonal(cov)), mean + 4*np.sqrt(np.diagonal(cov))
 beta = np.linspace(-0.8, 1.0, 10)
 df = 10
 gamma = np.array([1.0, 2.0, 2.0, 3.0])
@@ -26,10 +25,9 @@ def g_0(d, x):
     return linear_part + nonlinear_part
 
 
-# Generate a dataset of size N in vectorized fashion
+# Generate a data set of size N in vectorized fashion
 def get_data(N, rng):
     x_normal = rng.multivariate_normal(mean=mean, cov=cov, size=N)
-    np.clip(x_normal, lower, upper, out=x_normal)
     x_uniform = rng.uniform(size=(N,2))
     x_data = np.concatenate((x_normal, x_uniform), axis=1)
 
@@ -40,3 +38,4 @@ def get_data(N, rng):
     y_data = g_0(d_data, x_data) + u 
 
     return y_data, d_data, x_data
+    
