@@ -100,7 +100,7 @@ def dml_ate(y_data, d_data, x_data_all, model_g, model_m, K=5, alpha=0.05, class
         reg_hat, ipw_hat = np.mean(reg_check_list), np.mean(ipw_check_list)
 
     # Inference: estimate standard deviation and construct confidence interval
-    sigma_hat = np.sqrt(np.mean((np.array(scores_list)-theta_0_hat)**2))
+    sigma_hat = np.sqrt(np.mean((np.concatenate(scores_list)-theta_0_hat)**2))
     N = len(y_data)
     quantile = norm.ppf(1-alpha/2)
     CI = np.array([theta_0_hat-quantile*sigma_hat/np.sqrt(N), theta_0_hat+quantile*sigma_hat/np.sqrt(N)])
@@ -189,7 +189,7 @@ def dml_parallel_ate(y_data, d_data, x_data_all, model_g, model_m, K=5, alpha=0.
         reg_hat, ipw_hat = np.mean(reg_check_list), np.mean(ipw_check_list)
 
     # Inference: estimate standard deviation and construct confidence interval
-    sigma_hat = np.sqrt(np.mean((np.array(scores_list)-theta_0_hat)**2))
+    sigma_hat = np.sqrt(np.mean((np.concatenate(scores_list)-theta_0_hat)**2))
     N = len(y_data)
     quantile = norm.ppf(1-alpha/2)
     CI = np.array([theta_0_hat-quantile*sigma_hat/np.sqrt(N), theta_0_hat+quantile*sigma_hat/np.sqrt(N)])
