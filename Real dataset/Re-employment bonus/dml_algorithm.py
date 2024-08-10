@@ -33,7 +33,7 @@ def dml_ate_att(y_data, d_data, x_data, model_g, model_m, K=5, alpha=0.05, m_bou
         att_scores = d_eval*(y_eval-g_0_hat[0]) - m_0_hat*(1-d_eval)*(y_eval-g_0_hat[0])/(1-m_0_hat)
         ate_aux, att_aux = np.mean(ate_scores), np.mean(att_scores)/np.mean(d_eval)
 
-        return ate_aux, att_aux, ate_scores, lambda theta: (att_scores-theta*d_eval)/np.mean(d_train)
+        return ate_aux, att_aux, ate_scores, [att_scores, d_eval, np.mean(d_train)]
 
     # Partition the data for cross-fitting
     skf = StratifiedKFold(n_splits=K, shuffle=False)
@@ -52,7 +52,7 @@ def dml_ate_att(y_data, d_data, x_data, model_g, model_m, K=5, alpha=0.05, m_bou
 
     # Inference: estimate standard deviation and construct confidence interval
     ate_sigma_hat = np.sqrt(np.mean((np.concatenate(ate_scores_list)-ate_hat)**2))
-    att_sigma_hat = np.sqrt(np.mean(np.concatenate([phi(att_hat) for phi in att_scores_list])**2))
+    att_sigma_hat = np.sqrt(np.mean(np.concatenate([(scores-att_hat*d_eval)/d_bar_train for scores, d_eval, d_bar_train in att_scores_list])**2))
     N = len(y_data)
     quantile = norm.ppf(1-alpha/2)
     ate_CI = np.array([ate_hat-quantile*ate_sigma_hat/np.sqrt(N), ate_hat+quantile*ate_sigma_hat/np.sqrt(N)])
